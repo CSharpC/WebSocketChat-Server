@@ -31,16 +31,15 @@ func wsHandle(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	var clInfo ClientInfo
 	err = conn.ReadJSON(&clInfo)
-	if err != nil || len(clInfo.ID) == 0 || len(clInfo.Nickname) == 0 {
-		log.Println("Couldn't decode client info. Aborting.")
+	if err != nil || len(clInfo.ID) == 0 {
+		log.Println("Couldn't decode client info. Aborting.", err)
 		return
 	}
 	client := &Client{
-		hub:      hub,
-		conn:     conn,
-		ID:       clInfo.ID,
-		nickname: clInfo.Nickname,
-		send:     make(chan Message, 10),
+		hub:  hub,
+		conn: conn,
+		ID:   clInfo.ID,
+		send: make(chan Message, 10),
 	}
 	hub.addClient <- client
 	hub.roomSubscribe("room1") <- client
@@ -62,7 +61,6 @@ func (c *Client) readWs() {
 			log.Println("We got an error reading from the client, interrupting communication.")
 			break
 		}
-		m.From = c.nickname
 		c.hub.routeMessage(m.To) <- m
 	}
 }

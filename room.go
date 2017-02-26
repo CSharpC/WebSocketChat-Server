@@ -1,6 +1,6 @@
 package main
 
-type Room struct {
+type Channel struct {
 	ID          string
 	Name        string
 	clients     map[*Client]bool
@@ -9,8 +9,8 @@ type Room struct {
 	unsubscribe chan *Client
 }
 
-func newRoom(ID, name string) *Room {
-	return &Room{
+func newChannel(ID, name string) *Channel {
+	return &Channel{
 		clients:     make(map[*Client]bool),
 		subscribe:   make(chan *Client),
 		unsubscribe: make(chan *Client),
@@ -20,7 +20,7 @@ func newRoom(ID, name string) *Room {
 	}
 }
 
-func (r *Room) run() {
+func (r *Channel) run() {
 	for {
 		select {
 		case client := <-r.subscribe:

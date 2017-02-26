@@ -1,8 +1,7 @@
 package main
 
 type ClientInfo struct {
-	Nickname string
-	ID       string
+	ID string
 }
 
 type Message struct {

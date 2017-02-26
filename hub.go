@@ -1,20 +1,20 @@
 package main
 
 type Hub struct {
-	rooms        map[string]*Room
+	rooms        map[string]*Channel
 	clients      map[string]*Client
-	addRoom      chan *Room
-	removeRoom   chan *Room
+	addChannel   chan *Channel
+	removeRoom   chan *Channel
 	addClient    chan *Client
 	removeClient chan *Client
 }
 
 func newHub() *Hub {
 	return &Hub{
-		make(map[string]*Room),
+		make(map[string]*Channel),
 		make(map[string]*Client),
-		make(chan *Room),
-		make(chan *Room),
+		make(chan *Channel),
+		make(chan *Channel),
 		make(chan *Client),
 		make(chan *Client),
 	}
@@ -33,7 +33,7 @@ func (h *Hub) routeMessage(id string) chan Message {
 func (h *Hub) run() {
 	for {
 		select {
-		case room := <-h.addRoom:
+		case room := <-h.addChannel:
 			h.rooms[room.ID] = room
 
 		case room := <-h.removeRoom:
