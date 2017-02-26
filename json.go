@@ -6,7 +6,7 @@ type ClientInfo struct {
 }
 
 type Message struct {
-	To      string
 	From    string
+	To      string
 	Content string
 }
