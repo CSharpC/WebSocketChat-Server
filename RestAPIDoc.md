@@ -32,10 +32,12 @@
 ###User
 
 * /user/name
+
    Updates the user nickname. It can also return the current user nickname if the name parameter in the POST request is empty.
    Accepts a POST request with ```{ "client_id":"id_here", "name":"example"}```, returns ```{"name":"name_here"}```
    
 * /user/channels
+
    Returns a JSON array of channels the user is subscribed to. 
    Accepts a POST request with ```{ "client_id":"id_here"}```, returns ```{ [{"id":"abcd", name:"name"}, ...]}```
    
