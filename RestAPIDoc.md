@@ -6,7 +6,7 @@
 
 * /signup
    
-   A GET request will return ```{"id":"example"}```. That will be your client_id from now on, and will be saved in the server database.
+   Accepts a POST request with your client-generated id, of the form ```{ "id":"id_here" }```
 
 
 ###Channels  

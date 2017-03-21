@@ -4,49 +4,64 @@ import (
 	"log"
 	"net/http"
 
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/gorilla/websocket"
 )
 
+var router *Router
+
 func main() {
-	var hub *Hub
-	hub = newHub()
-	go hub.run()
-	room := newChannel(getUUID(), "room1")
-	go room.run()
-	hub.addChannel <- room
-
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsHandle(hub, w, r)
-	})
-	http.HandleFunc("/channels/list", func(w http.ResponseWriter, r *http.Request) {
-		handleRESTCheckID(w, r, handleChannelsList, hub)
-	})
-	http.HandleFunc("/channels/create", func(w http.ResponseWriter, r *http.Request) {
-		handleRESTCheckID(w, r, handleChannelCreate, hub)
-	})
-	http.HandleFunc("/channels/delete", func(w http.ResponseWriter, r *http.Request) {
-		handleRESTCheckID(w, r, handleChannelDelete, hub)
-	})
-	http.HandleFunc("/user/name", func(w http.ResponseWriter, r *http.Request) {
-		handleRESTCheckID(w, r, handleUserName, hub)
-	})
-
-	err := http.ListenAndServe(":21197", nil)
+	loadDB("./db.sqlite")
+	router = &Router{
+		make(map[string]Sendable),
+		make(chan Sendable),
+		make(chan RouterQuery),
+	}
+	router.Run()
+	for _, c := range getChannelsList() {
+		ch := &Channel{
+			make(chan Message),
+			c.ID,
+			c.Name,
+			make(map[string]Sendable),
+			make(chan Sendable),
+			make(chan Sendable),
+			make(chan bool),
+		}
+		router.addSendable <- ch
+		ch.Run()
+	}
+	http.HandleFunc("/ws", createWs)
+	http.HandleFunc("/channels/list", channelList)
+	err := http.ListenAndServe(":29107", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getUUID() string {
-	u, _ := uuid.NewV4()
-	return u.String()
-}
-
-func handleRESTCheckID(w http.ResponseWriter, r *http.Request, f RESTHandlerFunc, h *Hub) {
+func createWs(w http.ResponseWriter, r *http.Request) {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("Failed upgrading connection", err)
+	}
 	id := r.URL.Query().Get("client_id")
-	if id != "goo" && id != "reyth" {
+	if !knownID(id) {
+		log.Println("Unknown User:", id)
 		w.WriteHeader(403)
 		return
 	}
-	f(h, w, r)
+	cl := &Client{
+		send:       make(chan Message),
+		router:     router,
+		conn:       c,
+		id:         id,
+		disconnect: make(chan bool),
+	}
+	router.addSendable <- cl
+	go cl.readWs()
+	cl.writeWs()
+	log.Println("Ending", cl.ID(), "goroutine")
 }
