@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -14,6 +16,10 @@ type Client struct {
 	id         string
 }
 
+const (
+	writeWait = 10 * time.Second
+)
+
 func (c *Client) Send() chan Message {
 	return c.send
 }
@@ -23,7 +29,7 @@ func (c *Client) ID() string {
 }
 
 func (c *Client) Type() int {
-	return TYPE_CLIENT
+	return TypeClient
 }
 
 func (c *Client) readWs() {
@@ -45,12 +51,13 @@ func (c *Client) readWs() {
 			log.Println(err)
 			continue
 		}
-		c.router.query <- RouterQuery{m.To, TYPE_ANY, q}
+		c.router.query <- RouterQuery{m.To, TypeAny, q}
 		s := <-q
 		if s == nil {
 			log.Println("Can't find sendable:", m.To)
 			continue
 		}
+		m.From = c.id
 		s.Send() <- m
 	}
 }
@@ -61,6 +68,7 @@ func (c *Client) Disconnect() chan bool {
 
 func (c *Client) writeWs() {
 	for m := range c.send {
+		c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 		err := c.conn.WriteJSON(m)
 		if err != nil {
 			log.Println("Can't send message:", err)

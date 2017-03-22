@@ -21,7 +21,7 @@ func (c *Channel) ID() string {
 }
 
 func (c *Channel) Type() int {
-	return TYPE_CHANNEL
+	return TypeChannel
 }
 
 func (c *Channel) run() {
@@ -64,6 +64,7 @@ func (c *Channel) subscribe() {
 			return
 		}
 		c.members[s.ID()] = s
+		log.Println("Channel", c.id+":", "subscribed", s.ID())
 		go func() {
 			<-s.Disconnect()
 			log.Println("Deleting", s.ID(), "from", c.ID())

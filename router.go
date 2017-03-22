@@ -3,9 +3,9 @@ package main
 import "log"
 
 const (
-	TYPE_ANY     = iota
-	TYPE_CLIENT  = iota
-	TYPE_CHANNEL = iota
+	TypeAny     = iota
+	TypeClient  = iota
+	TypeChannel = iota
 )
 
 type RouterQuery struct {
@@ -38,7 +38,7 @@ func (r *Router) add() {
 
 func (r *Router) listenQuery() {
 	for q := range r.query {
-		if s, ok := r.sendables[q.ID]; ok && (s.Type() == q.Type || q.Type == TYPE_ANY) {
+		if s, ok := r.sendables[q.ID]; ok && (s.Type() == q.Type || q.Type == TypeAny) {
 			q.result <- s
 		} else {
 			q.result <- nil

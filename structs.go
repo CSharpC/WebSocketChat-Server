@@ -10,5 +10,6 @@ type Sendable interface {
 type Message struct {
 	Type    int
 	To      string
+	From    string
 	Content string
 }

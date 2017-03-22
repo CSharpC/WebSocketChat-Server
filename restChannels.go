@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/guglicap/chatServer/db"
 )
 
-func channelList(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("client_id")
-	if !knownID(id) {
+func RESTChanList(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	if !db.KnownToken(token) {
 		w.WriteHeader(403)
 		return
 	}
-	channels := getChannelsList()
+	channels := db.GetChannelsList()
 	result, err := json.Marshal(channels)
 	if err != nil {
 		log.Println("Error JSONing channels:", err)
